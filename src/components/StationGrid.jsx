@@ -43,12 +43,12 @@ function CarouselRow({ title, stations, currentIndex, favorites, onPlay, onFav }
             return (
               <div
                 key={station.id}
-                className="netflix-card"
+                className="netflix-card flex flex-col"
                 onClick={() => onPlay(station.index)}
               >
                 {/* Imagen / Gradient */}
                 <div
-                  className="w-full h-full flex items-center justify-center relative"
+                  className="w-full flex-1 flex items-center justify-center relative"
                   style={{ background: gradient }}
                 >
                   <span className="text-4xl opacity-50">&#127897;</span>
@@ -86,6 +86,12 @@ function CarouselRow({ title, stations, currentIndex, favorites, onPlay, onFav }
                     <p className="text-xs text-gray-300">{station.ciudad}</p>
                     <span className="text-[10px] text-gray-400 mt-1">{station.via}</span>
                   </div>
+                </div>
+
+                {/* Info siempre visible */}
+                <div className="bg-[#141414] px-1 pt-2 pb-1">
+                  <h4 className="text-xs font-semibold text-white truncate leading-tight">{station.titulo}</h4>
+                  <p className="text-[10px] text-gray-400 truncate">{station.ciudad}</p>
                 </div>
               </div>
             );
