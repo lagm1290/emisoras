@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { RadioProvider, useRadio } from './context/RadioContext';
 import { useAudio } from './hooks/useAudio';
 import { getEmisoras } from './services/api';
+import { ordenCadenas } from './data/stations';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import StationGrid from './components/StationGrid';
@@ -27,14 +28,9 @@ function AppContent() {
       });
   }, [setEmisoras]);
 
-  const ciudades = useMemo(() => {
-    const set = new Set(emisoras.map((e) => e.ciudad));
-    return ['Todas', ...Array.from(set).sort()];
-  }, [emisoras]);
-
   const cadenas = useMemo(() => {
-    const set = new Set(emisoras.map((e) => e.cadena));
-    return Array.from(set).sort();
+    const presentes = new Set(emisoras.map((e) => e.cadena));
+    return ordenCadenas.filter((c) => presentes.has(c));
   }, [emisoras]);
 
   useEffect(() => {
@@ -58,28 +54,31 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-xl">Cargando emisoras...</p>
+      <div className="min-h-screen bg-[#141414] text-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400">Cargando emisoras...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4 text-center">
+      <div className="min-h-screen bg-[#141414] text-white flex items-center justify-center px-4 text-center">
         <div>
           <p className="text-red-500 text-xl mb-2">⚠️ Error</p>
-          <p>{error}</p>
+          <p className="text-gray-400">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pb-28">
-      <Header ciudades={ciudades} />
+    <div className="min-h-screen bg-[#141414] text-white pb-24">
+      <Header />
       <Hero emisoras={emisoras} />
-      <StationGrid emisoras={emisoras} ciudades={ciudades} cadenas={cadenas} />
+      <StationGrid emisoras={emisoras} cadenas={cadenas} />
       <PlayerBar />
     </div>
   );

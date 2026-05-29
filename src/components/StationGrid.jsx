@@ -1,193 +1,161 @@
-import { useState, useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 import { useRadio } from '../context/RadioContext';
 import { useAudio } from '../hooks/useAudio';
 import { stringToGradient } from '../utils/colors';
 
-export default function StationGrid({ emisoras, ciudades, cadenas }) {
-  const { searchQuery } = useRadio();
-  const { playStation } = useAudio();
-  const { favorites, currentIndex } = useRadio();
-  const [selectedCityFilter, setSelectedCityFilter] = useState('Todas');
-  const [expandedCard, setExpandedCard] = useState(null);
+function CarouselRow({ title, stations, currentIndex, favorites, onPlay, onFav }) {
+  const rowRef = useRef(null);
 
-  // Agrupar emisoras por cadena
+  const scroll = (dir) => {
+    if (rowRef.current) {
+      rowRef.current.scrollBy({ left: dir * rowRef.current.clientWidth * 0.8, behavior: 'smooth' });
+    }
+  };
+
+  if (!stations || stations.length === 0) return null;
+
+  return (
+    <div className="mb-8 md:mb-12 group/row">
+      <h3 className="text-lg md:text-xl font-bold text-white mb-3 px-4 md:px-12 flex items-center gap-2 cursor-pointer hover:text-gray-300 transition">
+        {title}
+        <span className="text-xs font-normal text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
+          {stations.length}
+        </span>
+        <span className="opacity-0 group-hover/row:opacity-100 transition-opacity text-sm">&#8250;</span>
+      </h3>
+
+      <div className="relative">
+        {/* Botón izquierda */}
+        <button
+          onClick={() => scroll(-1)}
+          className="absolute left-0 top-0 bottom-0 w-12 md:w-16 z-20 bg-black/50 hover:bg-black/70 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
+        >
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+
+        {/* Carrusel */}
+        <div ref={rowRef} className="carousel-row px-4 md:px-12">
+          {stations.map((station) => {
+            const isPlaying = currentIndex === station.index;
+            const isFav = favorites.includes(station.index);
+            const gradient = stringToGradient(station.cadena + station.ciudad);
+
+            return (
+              <div
+                key={station.id}
+                className="netflix-card"
+                onClick={() => onPlay(station.index)}
+              >
+                {/* Imagen / Gradient */}
+                <div
+                  className="w-full h-full flex items-center justify-center relative"
+                  style={{ background: gradient }}
+                >
+                  <span className="text-4xl opacity-50">&#127897;</span>
+
+                  {/* Badge reproduciendo */}
+                  {isPlaying && (
+                    <div className="absolute top-2 left-2 bg-[#E50914] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                      REPRODUCIENDO
+                    </div>
+                  )}
+
+                  {/* Overlay hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onPlay(station.index); }}
+                        className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition"
+                      >
+                        {isPlaying ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onFav(station.index); }}
+                        className="w-8 h-8 rounded-full border border-gray-400 text-white flex items-center justify-center hover:border-white transition"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? '#E50914' : 'none'} stroke={isFav ? '#E50914' : 'currentColor'} strokeWidth="2">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <h4 className="text-sm font-bold truncate">{station.titulo}</h4>
+                    <p className="text-xs text-gray-300">{station.ciudad}</p>
+                    <span className="text-[10px] text-gray-400 mt-1">{station.via}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Botón derecha */}
+        <button
+          onClick={() => scroll(1)}
+          className="absolute right-0 top-0 bottom-0 w-12 md:w-16 z-20 bg-black/50 hover:bg-black/70 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
+        >
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function StationGrid({ emisoras, cadenas }) {
+  const { searchQuery, currentIndex, favorites, toggleFavorite } = useRadio();
+  const { playStation } = useAudio();
+
   const porCadena = useMemo(() => {
     const map = {};
     emisoras.forEach((e, idx) => {
-      if (!map[e.cadena]) {
-        map[e.cadena] = {
-          cadena: e.cadena,
-          emisoras: [],
-          ciudades: [],
-        };
-      }
-      map[e.cadena].emisoras.push({ ...e, index: idx });
-      map[e.cadena].ciudades.push(e.ciudad);
+      if (!map[e.cadena]) map[e.cadena] = [];
+      map[e.cadena].push({ ...e, index: idx });
     });
     return map;
   }, [emisoras]);
 
-  // Filtrar cadenas
-  const filteredCadenas = useMemo(() => {
-    let result = cadenas.map((c) => porCadena[c]).filter(Boolean);
-
-    if (selectedCityFilter !== 'Todas') {
-      result = result.filter((c) => c.ciudades.includes(selectedCityFilter));
-    }
+  const rows = useMemo(() => {
+    let result = cadenas
+      .map((c) => ({ cadena: c, stations: porCadena[c] || [] }))
+      .filter((r) => r.stations.length > 0);
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (c) =>
-          c.cadena.toLowerCase().includes(q) ||
-          c.ciudades.some((ciu) => ciu.toLowerCase().includes(q))
+        (r) =>
+          r.cadena.toLowerCase().includes(q) ||
+          r.stations.some((s) =>
+            s.titulo.toLowerCase().includes(q) ||
+            s.ciudad.toLowerCase().includes(q)
+          )
       );
     }
 
     return result;
-  }, [porCadena, cadenas, selectedCityFilter, searchQuery]);
-
-  const gradientMap = {
-    'Olímpica Stereo': 'from-red-600 to-red-400',
-    'La FM': 'from-orange-600 to-orange-400',
-    'Radio Uno': 'from-green-600 to-green-400',
-    'La Mega': 'from-purple-600 to-purple-400',
-    'Mix Radio': 'from-cyan-600 to-cyan-400',
-    'Radio Tiempo': 'from-yellow-600 to-yellow-400',
-    'Alerta': 'from-pink-600 to-pink-400',
-    'El Sol': 'from-amber-600 to-amber-400',
-    'La Reina': 'from-teal-600 to-teal-400',
-    'Emisora Atlántico': 'from-indigo-600 to-indigo-400',
-  };
+  }, [cadenas, porCadena, searchQuery]);
 
   return (
-    <main className="px-6 md:px-10 py-10 space-y-10">
-      {/* Filtros */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <span className="text-zinc-400 text-sm">Ciudad:</span>
-          <div className="relative">
-            <select
-              value={selectedCityFilter}
-              onChange={(e) => setSelectedCityFilter(e.target.value)}
-              className="appearance-none bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 pr-10 text-sm text-white outline-none hover:border-red-500 transition cursor-pointer"
-            >
-              {ciudades.map((city) => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </select>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none text-xs">▼</span>
-          </div>
+    <div className="relative z-10 -mt-16 md:-mt-24 pb-10">
+      {rows.map((row) => (
+        <CarouselRow
+          key={row.cadena}
+          title={row.cadena}
+          stations={row.stations}
+          currentIndex={currentIndex}
+          favorites={favorites}
+          onPlay={playStation}
+          onFav={toggleFavorite}
+        />
+      ))}
+
+      {rows.length === 0 && (
+        <div className="text-center py-20 text-gray-500">
+          No se encontraron emisoras con ese criterio de búsqueda.
         </div>
-
-        {selectedCityFilter !== 'Todas' && (
-          <button
-            onClick={() => setSelectedCityFilter('Todas')}
-            className="text-red-500 text-sm hover:underline"
-          >
-            Ver todas las ciudades
-          </button>
-        )}
-      </div>
-
-      {/* Grid de Cadenas */}
-      <section>
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-2xl font-bold">Emisoras por Cadena</h3>
-          <span className="text-zinc-500 text-sm">{filteredCadenas.length} cadenas</span>
-        </div>
-
-        {filteredCadenas.length === 0 ? (
-          <p className="text-zinc-500 text-center py-10">No se encontraron emisoras con esos filtros.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCadenas.map((cadenaData) => {
-              const isExpanded = expandedCard === cadenaData.cadena;
-              const count = cadenaData.emisoras.length;
-              const gradient = gradientMap[cadenaData.cadena] || 'from-zinc-700 to-zinc-500';
-
-              return (
-                <div
-                  key={cadenaData.cadena}
-                  className="group relative overflow-hidden rounded-3xl bg-zinc-900 hover:scale-[1.02] transition duration-300 shadow-2xl"
-                >
-                  {/* Header de tarjeta */}
-                  <div
-                    className={`h-48 w-full flex flex-col items-center justify-center bg-gradient-to-br ${gradient} relative p-5`}
-                  >
-                    <span className="text-5xl mb-2 opacity-80">&#127897;</span>
-                    <h4 className="text-2xl font-bold text-center">{cadenaData.cadena}</h4>
-                    <span className="text-sm opacity-90 mt-1">{count} ciudades</span>
-
-                    {cadenaData.emisoras.some((e) => e.index === currentIndex) && (
-                      <div className="absolute top-3 right-3 bg-white text-black text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                        REPRODUCIENDO
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-5">
-                    {/* Ciudades disponibles */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {cadenaData.emisoras.map((station) => (
-                        <button
-                          key={station.id}
-                          onClick={() => playStation(station.index)}
-                          className={`text-xs px-3 py-1.5 rounded-full transition font-medium ${
-                            station.index === currentIndex
-                              ? 'bg-red-600 text-white'
-                              : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
-                          }`}
-                        >
-                          {station.ciudad}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Expandir lista */}
-                    <button
-                      onClick={() => setExpandedCard(isExpanded ? null : cadenaData.cadena)}
-                      className="w-full text-center text-sm text-zinc-500 hover:text-white transition py-2"
-                    >
-                      {isExpanded ? 'Ocultar detalles ▲' : 'Ver ciudades ▼'}
-                    </button>
-
-                    {/* Lista expandida */}
-                    {isExpanded && (
-                      <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
-                        {cadenaData.emisoras.map((station) => {
-                          const isFav = favorites.includes(station.index);
-                          return (
-                            <div
-                              key={station.id}
-                              className="flex items-center justify-between bg-zinc-800/50 rounded-xl px-3 py-2"
-                            >
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold truncate">{station.titulo}</p>
-                                <p className="text-xs text-zinc-500">{station.via}</p>
-                              </div>
-                              <div className="flex gap-2 shrink-0">
-                                <button
-                                  onClick={() => playStation(station.index)}
-                                  className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition"
-                                >
-                                  {station.index === currentIndex ? 'Pausar' : 'Escuchar'}
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-    </main>
+      )}
+    </div>
   );
 }
-
-

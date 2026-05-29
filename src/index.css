@@ -1,7 +1,66 @@
 @import "tailwindcss";
 
 body {
-  background-color: #000;
+  background-color: #141414;
   color: #fff;
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Scrollbar estilo Netflix */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #141414;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Carrusel Netflix */
+.carousel-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding: 20px 0;
+  -webkit-overflow-scrolling: touch;
+}
+.carousel-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tarjeta Netflix */
+.netflix-card {
+  flex: 0 0 auto;
+  width: 16%;
+  min-width: 200px;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), z-index 0s;
+  position: relative;
+  z-index: 1;
+}
+.netflix-card:hover {
+  transform: scale(1.4);
+  z-index: 10;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+}
+
+@media (max-width: 1200px) {
+  .netflix-card { width: 20%; min-width: 180px; }
+  .netflix-card:hover { transform: scale(1.3); }
+}
+@media (max-width: 768px) {
+  .netflix-card { width: 33%; min-width: 140px; }
+  .netflix-card:hover { transform: scale(1.2); }
 }
