@@ -1,9 +1,9 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRadio } from '../context/RadioContext';
-import { emisoras } from '../data/stations';
 
 export function useAudio() {
   const {
+    emisoras,
     currentIndex,
     setCurrentIndex,
     isPlaying,
@@ -53,7 +53,7 @@ export function useAudio() {
       console.error('Error reproduciendo:', err);
       showToast('⚠️ Error al reproducir. Intenta otra emisora.');
     });
-  }, [audioRef, setCurrentIndex, setIsPlaying, setElapsedTime, startProgress, showToast]);
+  }, [emisoras, audioRef, setCurrentIndex, setIsPlaying, setElapsedTime, startProgress, showToast]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -73,18 +73,18 @@ export function useAudio() {
   }, [audioRef, currentIndex, isPlaying, setIsPlaying, stopProgress, startProgress, showToast]);
 
   const nextStation = useCallback(() => {
-    if (currentIndex === -1) return;
+    if (currentIndex === -1 || emisoras.length === 0) return;
     let next = currentIndex + 1;
     if (next >= emisoras.length) next = 0;
     playStation(next);
-  }, [currentIndex, playStation]);
+  }, [currentIndex, emisoras.length, playStation]);
 
   const prevStation = useCallback(() => {
-    if (currentIndex === -1) return;
+    if (currentIndex === -1 || emisoras.length === 0) return;
     let prev = currentIndex - 1;
     if (prev < 0) prev = emisoras.length - 1;
     playStation(prev);
-  }, [currentIndex, playStation]);
+  }, [currentIndex, emisoras.length, playStation]);
 
   const setVolumeLevel = useCallback((pct) => {
     const audio = audioRef.current;

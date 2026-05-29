@@ -1,10 +1,10 @@
 import { useRef, useCallback } from 'react';
 import { useRadio } from '../context/RadioContext';
 import { useAudio } from '../hooks/useAudio';
-import { emisoras } from '../data/stations';
 
 export default function NowPlaying() {
   const {
+    emisoras,
     currentIndex,
     isPlaying,
     elapsedTime,

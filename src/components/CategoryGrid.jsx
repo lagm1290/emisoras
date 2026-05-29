@@ -1,12 +1,6 @@
-import { emisoras, ordenCadenas, cadenaColors } from '../data/stations';
+import { cadenaColors } from '../data/stations';
 
-export default function CategoryGrid() {
-  const porCadena = {};
-  emisoras.forEach((e) => {
-    if (!porCadena[e.cadena]) porCadena[e.cadena] = [];
-    porCadena[e.cadena].push(e);
-  });
-
+export default function CategoryGrid({ cadenas }) {
   const scrollToSection = (cadena) => {
     const id = 'section-' + cadena.replace(/\s+/g, '-');
     const el = document.getElementById(id);
@@ -24,8 +18,7 @@ export default function CategoryGrid() {
         </div>
       </section>
       <div className="categories-grid">
-        {ordenCadenas.map((cadena) => {
-          if (!porCadena[cadena]) return null;
+        {cadenas.map(({ cadena, count }) => {
           const colors = cadenaColors[cadena] || ['#666', '#888'];
           return (
             <div
@@ -37,7 +30,7 @@ export default function CategoryGrid() {
               <div className="cat-bg"></div>
               <div className="cat-icon">&#127897;</div>
               <h3>{cadena}</h3>
-              <span className="cat-count">{porCadena[cadena].length} emisoras</span>
+              <span className="cat-count">{count} emisoras</span>
             </div>
           );
         })}

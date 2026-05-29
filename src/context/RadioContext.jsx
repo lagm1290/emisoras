@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useRef, useCallback } from 'react'
 const RadioContext = createContext(null);
 
 export function RadioProvider({ children }) {
+  const [emisoras, setEmisoras] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [favorites, setFavorites] = useState(() => {
@@ -45,6 +46,8 @@ export function RadioProvider({ children }) {
   const clearToast = useCallback(() => setToastMessage(null), []);
 
   const value = {
+    emisoras,
+    setEmisoras,
     currentIndex,
     setCurrentIndex,
     isPlaying,

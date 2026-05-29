@@ -1,7 +1,14 @@
+import { useMemo } from 'react';
+import { useRadio } from '../context/RadioContext';
 import { useAudio } from '../hooks/useAudio';
 
 export default function Hero() {
+  const { emisoras } = useRadio();
   const { playStation } = useAudio();
+
+  const olimpicaIndex = useMemo(() => {
+    return emisoras.findIndex((e) => e.titulo === 'Olímpica Stereo Bogotá');
+  }, [emisoras]);
 
   return (
     <section className="hero">
@@ -15,11 +22,11 @@ export default function Hero() {
         <h1 className="hero-title">OLIMPICA STEREO</h1>
         <p className="hero-subtitle">La radio más popular de Colombia</p>
         <p className="hero-description">
-          Escucha las mejores emisoras colombianas en vivo. 77 emisoras de 10 cadenas diferentes,
+          Escucha las mejores emisoras colombianas en vivo. {emisoras.length} emisoras de 10 cadenas diferentes,
           desde Bogotá hasta Cartagena, desde Pop hasta Vallenato.
         </p>
         <div className="hero-buttons">
-          <button className="btn btn-primary" onClick={() => playStation(18)}>
+          <button className="btn btn-primary" onClick={() => olimpicaIndex !== -1 && playStation(olimpicaIndex)}>
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             Reproducir Olímpica Bogotá
           </button>
